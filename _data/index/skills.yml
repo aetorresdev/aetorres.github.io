@@ -1,9 +1,10 @@
-# skills section data
+# skills section data - radar charts
 
-- label: Cloud Tech
-  id : cs1
-  aspects: AWS, Azure, Gcloud, Terraform, Cloudformation, Akamai
-  percentage: 85, 60, 80, 80, 50, 40
+# Cloud platforms only (IaC moved to separate chart)
+- label: Cloud Platforms
+  id: cs1
+  aspects: AWS, Azure, GCP, Akamai
+  percentage: 85, 60, 80, 40
 
 - label: Operative Systems
   id: cs2
@@ -13,15 +14,36 @@
 - label: Programming
   id: cs3
   aspects: Bash, PHP, Java, Ruby on Rails, Python
-  percentage: 75, 80, 70, 80, 70,
+  percentage: 75, 80, 70, 80, 70
 
-- label: DevOps Tools
+# IaC and config automation (no longer under "Cloud")
+- label: IaC & Automation
   id: cs4
-  aspects: Kuberenetes, Ansible, Chef, Docker, Vagrant, Jenkins, Travis, Git, CircleCI, GitLab
-  percentage: 80, 75, 70, 80, 80, 70, 70, 90, 75, 65
+  aspects: Terraform, CloudFormation, Ansible, Chef, Puppet
+  percentage: 90, 70, 75, 70, 65
+
+- label: CI/CD
+  id: cs5
+  aspects: Jenkins, GitHub Actions, CircleCI, GitLab CI, Bitbucket Pipelines, Flux, ArgoCD
+  percentage: 95, 90, 85, 75, 75, 70, 75
+
+- label: Virtualization & Containers
+  id: cs6
+  aspects: Docker, Kubernetes, Vagrant, Packer
+  percentage: 85, 80, 80, 75
+
+- label: Observability
+  id: cs7
+  aspects: Prometheus, Grafana, DataDog, OpenTelemetry
+  percentage: 80, 80, 75, 70
 
 - label: DB and WebServers
-  id: cs5
+  id: cs8
   aspects: Weblogic, Apache, Tomcat, Nginx, Ambassador, MySql, PostgreSQL, SQL Server, Oracle SQL, Oracle SOA, Oracle Service Bus
   percentage: 90, 85, 85, 80, 70, 90, 90, 75, 85, 75, 75
 
+# AI: skills, agents, MCP usage, workflows, prompting (no vibe coding)
+- label: AI & Assistants
+  id: cs9
+  aspects: AI skills, Agents, MCP, N8N, Prompting
+  percentage: 80, 75, 70, 70, 85

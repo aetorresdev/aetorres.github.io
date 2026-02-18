@@ -4,13 +4,13 @@
     detail: Gorilla Logic
     i18n: gorilla_ca
   desc:
-    detail: Act as infrastructure developer for our clients, working with a big suite of tools such as, Kubernetes, Chef, Terraform, Cloudformation, Ansible, Jenkins, Docker, Vagrant, AWS, Google Cloud, Azure and other automation software.
+    detail: Cloud engineering consulting for enterprise clients on AWS. Design and deploy resilient, secure infrastructure with Terraform, Kubernetes (EKS), and GitHub Actions. Implemented GitOps with CircleCI and ArgoCD, increasing deployment frequency. Created onboarding guides and standardized infrastructure modules; mentor junior engineers.
     i18n: company_a_desc
   date:
-    detail: February 2020
+    detail: February 2020 - Present
     i18n: company_a_date
   job:
-    detail: DevOps Engineer
+    detail: Cloud Engineering Expert Consultant
     i18n: company_a_job
   icon: fa-plus-square
 
@@ -21,7 +21,7 @@
     detail: Act as infrastructure developer for our clients, working with a big suite of tools such as, Kubernetes, Chef, Terraform, Cloudformation, Ansible, Jenkins, Docker, Vagrant, AWS, Google Cloud, Azure and other automation software.
     i18n: company_a_desc
   date:
-    detail: August 2018 - February 2020
+    detail: September 2018 - February 2020
     i18n: company_a_date
   job:
     detail: DevOps Engineer

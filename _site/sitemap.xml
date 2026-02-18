@@ -2,6 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
     <url>
+        <loc>http://localhost:4000/aws/2019/11/14/aws.html</loc>
+    </url>
+
+    <url>
+        <loc>http://localhost:4000/aws/2018/12/20/aws.html</loc>
+    </url>
+
+    <url>
+        <loc>http://localhost:4000/aws/2018/11/20/terraform.html</loc>
+    </url>
+
+    <url>
         <loc>http://localhost:4000/aws/2018/06/20/lambda.html</loc>
     </url>
 
@@ -84,6 +96,10 @@
 
     <url>
         <loc>http://localhost:4000/vagrant/</loc>
+    </url>
+
+    <url>
+        <loc>http://localhost:4000/static/css/custom.css.map</loc>
     </url>
 
 </urlset>

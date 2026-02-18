@@ -5,6 +5,21 @@
             <h1><span data-i18n="projects.my_projects">My Projects</span></h1>
         </div>
     </div>
+    {% if site.show_recent_repos and site.recent_repos_user %}
+    <div class="row m-b-lg">
+        <div class="col-lg-12">
+            <h3 class="text-center">Recent repositories</h3>
+        </div>
+    </div>
+    <div id="recent-repos" class="row" data-user="{{ site.recent_repos_user }}" data-count="{{ site.recent_repos_count | default: 6 }}">
+        <div class="col-lg-12 text-center"><p>Loading...</p></div>
+    </div>
+    <div class="row m-b-lg">
+        <div class="col-lg-12">
+            <h3 class="text-center">Featured projects</h3>
+        </div>
+    </div>
+    {% endif %}
     <div class="row">
         {% for project in site.data.index.projects %}
             {% assign loopindex = forloop.index | modulo: 2 %}

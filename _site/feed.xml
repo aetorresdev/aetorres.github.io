@@ -1,38 +1,411 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Andres Site</title>
-    <description>Andres blog.</description>
+    <title>Andres Torres</title>
+    <description>DevOps engineer. Infrastructure, automation, cloud (AWS, Terraform, Kubernetes), observability.</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 20 Jun 2018 16:30:12 -0600</pubDate>
-    <lastBuildDate>Wed, 20 Jun 2018 16:30:12 -0600</lastBuildDate>
-    <generator>Jekyll v3.8.3</generator>
+    <pubDate>Wed, 18 Feb 2026 16:48:50 -0600</pubDate>
+    <lastBuildDate>Wed, 18 Feb 2026 16:48:50 -0600</lastBuildDate>
+    <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>Update URL for Nginx on Beanstalk Deployments</title>
+        <description>&lt;p&gt;&lt;em&gt;Note: Steps were valid as of 2019; Beanstalk and console options may have changed since then.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;beanstalk-immutable-deployment&quot;&gt;Beanstalk Immutable Deployment&lt;/h1&gt;
+
+&lt;p&gt;I faced an issue during my CI-CD process, in this process an artifact is created in develop environment with a default configuration that includes a URL to test the development environment; this artifact is immutable and is promoted to the different environments (Staging, QA, Demo, Prod).&lt;/p&gt;
+
+&lt;p&gt;The artifact structure will be something similar to this:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;MY_APP/
+    MY_APP.jar
+    .ebextensions
+        certificates_deploy.config
+        additional_commands.config
+        nginx/
+            conf.d/
+                nginx_ssl.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The content of those files will be something similar to this:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;certificates_deploy.config&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Resources:
+  AWSEBAutoScalingGroup:
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3Auth:
+          type: &quot;s3&quot;
+          buckets: [&quot;BUCKET-NAME&quot;]
+          roleName:
+            &quot;Fn::GetOptionSetting&quot;:
+              Namespace: &quot;aws:autoscaling:launchconfiguration&quot;
+              OptionName: &quot;IamInstanceProfile&quot;
+              DefaultValue: &quot;AWS-ACCESS-ROLE&quot;
+
+files:
+  &quot;/etc/nginx/certs/bundle.crt&quot; :
+    mode: &quot;000400&quot;
+    owner: root
+    group: root
+    authentication: &quot;S3Auth&quot;
+    source: https://s3.amazonaws.com/BUCKET-NAME/&amp;lt;PATH_TO_YOUR_BUNDLE&amp;gt;/bundle.crt
+
+  &quot;/etc/nginx/certs/my_domain.key&quot; :
+    mode: &quot;000400&quot;
+    owner: root
+    group: root
+    authentication: &quot;S3Auth&quot;
+    source: https://s3.amazonaws.com/BUCKET-NAME/&amp;lt;PATH_TO_YOUR_KEY&amp;gt;/my_domain.key
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;additional_commands.config&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;container_commands:
+  01update_ssl_url:
+    command: /etc/nginx/update_ssl_url.sh &quot;$ENVIRONMENT_NAME&quot; &quot;$APPLICATION_NAME&quot;
+  06restart_nginx:
+    command: &quot;service nginx restart&quot;
+
+files:
+  &quot;/etc/nginx/update_ssl_url.sh&quot;:
+    content: |
+      #!/usr/bin/env bash
+      environment_name=$1
+      application_name=$2
+      sed -i &quot;s/server_name*/server_name $application_name-$environment_name.my_domain.com;#/&quot; /etc/nginx/conf.d/nginx_ssl.conf
+      cat /etc/nginx/conf.d/nginx_ssl.conf
+    mode: &quot;000755&quot;
+    owner: root
+    group: root
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;nginx_ssl.conf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;server {
+  listen        443 http2 ssl default_server;
+  access_log    /var/log/nginx/access.log main;
+  server_name my-service-dev.my_domain.com;
+  ssl_certificate /etc/nginx/certs/bundle.crt;
+  ssl_certificate_key /etc/nginx/certs/my_domain.key;
+  client_header_timeout 60;
+  client_body_timeout   60;
+  keepalive_timeout     60;
+  ...
+  ...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;During the Execution will be pass an option file in JSON format with the Environment variables.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;env-dev.json&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[
+  {
+    &quot;Namespace&quot;: &quot;aws:elasticbeanstalk:application:environment&quot;,
+    &quot;OptionName&quot;: &quot;APPLICATION_NAME&quot;,
+    &quot;Value&quot;: &quot;my-service&quot;
+  },
+  {
+    &quot;Namespace&quot;: &quot;aws:elasticbeanstalk:application:environment&quot;,
+    &quot;OptionName&quot;: &quot;ENVIRONMENT_NAME&quot;,
+    &quot;Value&quot;: &quot;dev&quot;
+  },
+  {
+    &quot;Namespace&quot;: &quot;aws:elasticbeanstalk:application:environment&quot;,
+    &quot;OptionName&quot;: &quot;SERVER_PORT&quot;,
+    &quot;Value&quot;: &quot;9999&quot;
+  }
+]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;this file will be readed during the insstance update&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;aws elasticbeanstalk update-environment --environment-name &quot;my-service-dev&quot; --version-label &quot;1.0.0&quot; --option-settings file://env-dev.json
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now according to &lt;a href=&quot;https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html&quot;&gt;AWS Documentation &lt;/a&gt; the script &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;update_ssl_url.sh&lt;/code&gt; should be executed after the artifact is unpacked in the instance, but this does not happen; the script is executed before the artifact is unpacked and the file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx_ssl.conf&lt;/code&gt; is created in the instance giving you the same URL for every environment.&lt;/p&gt;
+
+&lt;p&gt;After some investigation I found that I have to use the &lt;a href=&quot;https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/custom-platform-hooks.html&quot;&gt;&lt;em&gt;elasticbeanstalk hooks&lt;/em&gt; &lt;/a&gt; that allow you to execute scripts after, during or before the deployment.&lt;/p&gt;
+
+&lt;p&gt;To be able to reach our goal the file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;additional-commands.config&lt;/code&gt; will be updated adding new lines and commands.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;container_commands:
+  01Install_jq:
+    command: &quot;yum install -y jq&quot;
+  02update_ssl_url:
+    command: /opt/elasticbeanstalk/hooks/appdeploy/post/update_ssl_url.sh
+  03restart_nginx:
+    command: &quot;service nginx restart&quot;
+
+files:
+  &quot;/opt/elasticbeanstalk/hooks/appdeploy/post/update_ssl_url.sh&quot;:
+    content: |
+      #!/usr/bin/env bash
+      application_name=$(sudo bash -c &apos;/opt/elasticbeanstalk/bin/get-config environment |jq -r &quot;.APPLICATION_NAME&quot;&apos;)
+      environment_name=$(sudo bash -c &apos;/opt/elasticbeanstalk/bin/get-config environment |jq -r &quot;.ENVIRONMENT_NAME&quot;&apos;)
+      if test -f &quot;/etc/nginx/conf.d/nginx_ssl.conf&quot;; then
+        sed -i &quot;s/server_name*/server_name $application_name-$environment_name.my_domain.com;#/&quot; /etc/nginx/conf.d/nginx_ssl.conf
+        cat /etc/nginx/conf.d/nginx_ssl.conf
+      fi
+    mode: &quot;000755&quot;
+    owner: root
+    group: root
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As you can see, we have installed &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jq&lt;/code&gt;  this will be used to read the environment variables that are created using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;env-dev.json&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Also we change the file location to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/opt/elasticbeanstalk/hooks/appdeploy/post/&lt;/code&gt; that is the PATH that is readed by AWS during the deployment to execute scripts after the deployment.&lt;/p&gt;
+
+&lt;p&gt;Using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get-config environment&lt;/code&gt; command we will be able to read the environment variables created with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;env-dev.josn&lt;/code&gt; file, then, the the URL will be updated in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx_ssl.conf&lt;/code&gt; file and nginx will be restarted.&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 14 Nov 2019 00:00:00 -0600</pubDate>
+        <link>http://localhost:4000/aws/2019/11/14/aws.html</link>
+        <guid isPermaLink="true">http://localhost:4000/aws/2019/11/14/aws.html</guid>
+        
+        <category>AWS</category>
+        
+        <category>Nginx</category>
+        
+        <category>Ebextensions</category>
+        
+        <category>Beanstalk</category>
+        
+        
+        <category>Aws</category>
+        
+      </item>
+    
+      <item>
+        <title>Configure API Gateway with Private Elastic Beanstalk</title>
+        <description>&lt;p&gt;&lt;em&gt;Note: Steps were valid as of 2018; AWS console and product names may have changed since then.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;api-gateway-configuration&quot;&gt;API Gateway configuration&lt;/h1&gt;
+
+&lt;p&gt;The goal of this document is to leave the configuration steps to create and connect an API Gateway to Beanstalk private services.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;api.png&quot; alt=&quot;Blueprint API&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The idea is to have a single access point to our services that are located in our private subnet through the API Gateway&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Network Configuration Steps&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Create a VPC with 2 subnets (One public and one private)&lt;/li&gt;
+      &lt;li&gt;Create a NAT Gateway, attach the public subnet and create a new Elastic IP.&lt;/li&gt;
+      &lt;li&gt;Configure or create a new Route Table for private subnet.
+        &lt;ul&gt;
+          &lt;li&gt;Create the route table and attach it to the VPC&lt;/li&gt;
+          &lt;li&gt;Edit the route tables adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0.0.0.0/0&lt;/code&gt; as destination and choose the NAT Gateway as Target&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Create the security groups for each subnet.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Beanstalk Configuration Steps
+    &lt;ul&gt;
+      &lt;li&gt;Create the Beanstalk environment and configure this:
+        &lt;ul&gt;
+          &lt;li&gt;Configure Network and choose your VPC and private subnet.&lt;/li&gt;
+          &lt;li&gt;Configure Security and add your Key Pair&lt;/li&gt;
+          &lt;li&gt;Configure Instances and choose the private security group that you have created.&lt;/li&gt;
+          &lt;li&gt;Configure Capacity and choose an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Load Balanced&lt;/code&gt;  Environment&lt;/li&gt;
+          &lt;li&gt;Configure Load Balancer and choose a Network Load Balancer, add a listener port (443) and a Processes port (443).&lt;/li&gt;
+          &lt;li&gt;On Rolling Update deployment choose &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Inmutable&lt;/code&gt; as Rolling Update Type.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;API Gateway Configuration
+    &lt;ul&gt;
+      &lt;li&gt;Once you have created your API Gateway, you need to createa VPC Link to connect your API Gateway to your Private Beanstalk
+        &lt;ul&gt;
+          &lt;li&gt;Change the Target NLB to the NLB created at the Beanstalk configuration&lt;/li&gt;
+          &lt;li&gt;Create a Custom Domain Name (The URL created is the one we are going to register in Route53)&lt;/li&gt;
+          &lt;li&gt;Create a stage for your API Gateway and add a Stage Variable that will target the VPC Link ID &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vpcLinkId&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;Choose Use Proxy Integration.&lt;/li&gt;
+          &lt;li&gt;Change the resources (GET, POST, etc) and on Integration Request change the Integration Type to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VPC Link&lt;/code&gt; on VPC Link choose &lt;em&gt;Use Stage Variables&lt;/em&gt; and add the vpc Link variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${stageVariables.vpcLinkId}&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;Change the Endpoint to the Custom Domain Name created or the one you choose, this will be used to set the Host header of the integration request.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Register the new URL on Route 53
+    &lt;ul&gt;
+      &lt;li&gt;Go to your hosted zone and create the new record on Route 53 with the &lt;em&gt;Target Domain Name&lt;/em&gt; from Custom Domain Name as Target&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 20 Dec 2018 00:00:00 -0600</pubDate>
+        <link>http://localhost:4000/aws/2018/12/20/aws.html</link>
+        <guid isPermaLink="true">http://localhost:4000/aws/2018/12/20/aws.html</guid>
+        
+        <category>AWS</category>
+        
+        <category>API Gateway</category>
+        
+        <category>Beanstalk</category>
+        
+        <category>VPC Link</category>
+        
+        
+        <category>Aws</category>
+        
+      </item>
+    
+      <item>
+        <title>Shared Terraform State file</title>
+        <description>&lt;p&gt;&lt;em&gt;Note (2025): Backend concept and workspaces are unchanged. For current syntax and options (e.g. S3 state locking, bucket versioning), see the &lt;a href=&quot;https://developer.hashicorp.com/terraform/language/settings/backends/s3&quot;&gt;official S3 backend docs&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Probably you are not familiarized with the infrastructure state concept: it’s a snapshot of what we have configured and running in our current infrastructure &lt;strong&gt;(VPCs, Subnets, Instances, RDS, Volumes, etc)&lt;/strong&gt;, this snapshot help us to update our infrastructure allowing us to run our scripts and applying just the changes that we have, this snapshot is what provide us idempotence in IT architecture creation.&lt;/p&gt;
+
+&lt;p&gt;Now, let’s say that we have a git repo with our terraform scripts, those scripts creates a VPC, two subnets and two instances one inside each subnet, this git repo has collaborators that can execute the deploy when they want; but, what happen with that &lt;strong&gt;state file&lt;/strong&gt;?; that state file cannot be stored in git because is a file that has sensitive info about our architecture and it changes quite often.&lt;/p&gt;
+
+&lt;p&gt;So, we have an issue here, what would happen if two collaborators apply their changes without share their &lt;strong&gt;state file&lt;/strong&gt;?. We will have infrastructure consistency errors because some changes will be executed before other and you could delete the changes made by another collaborator.&lt;/p&gt;
+
+&lt;p&gt;then, What can we do?&lt;/p&gt;
+
+&lt;p&gt;In this scenario, Terraform provides a remote state feature called &lt;a href=&quot;https://developer.hashicorp.com/terraform/language/settings/backends/s3&quot;&gt;&lt;strong&gt;backends&lt;/strong&gt;&lt;/a&gt;, which keeps the state file updated with every run.&lt;/p&gt;
+
+&lt;p&gt;Now what would happen if you want to test your changes without change the develop or QA or even production environment? In this scenario we could use a simple Terraform tool called &lt;strong&gt;workspaces&lt;/strong&gt;, this workspaces will allow us to create different environments that will have their own state file.&lt;/p&gt;
+
+&lt;p&gt;This workspace will not block the write over a state file, just will give us the chance to work with different state files and different stacks.&lt;/p&gt;
+
+&lt;p&gt;To work with this configuration follow the next steps:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Create an account with S3 access&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Create bucket for save terraform.tfstate files&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;YOUR-BUCKET-NAME
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Once we have the bucket created we need to configure it to save the terraform state files.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Create your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.tf&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;variable.tf&lt;/code&gt; files with your provider and bucket definition. Note: the backend block cannot use variables, so the region is hardcoded below. Enable &lt;strong&gt;bucket versioning&lt;/strong&gt; on the S3 bucket (in the AWS console) so you can recover state if needed. Optionally set &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;use_lockfile = true&lt;/code&gt; in the backend for state locking.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.tf&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;language-hcl highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nx&quot;&gt;provider&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;aws&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;region&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;var&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;region&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;terraform&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;backend&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;s3&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;bucket&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;YOUR-BUCKET-NAME&quot;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;terraform.tfstate&quot;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;region&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;us-west-1&quot;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;encrypt&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;use_lockfile&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# optional: S3-based state locking&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;variables.tf&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;language-hcl highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nx&quot;&gt;variable&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;region&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;us-west-1&quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;variable&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;environment&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;dev&quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Initialize your backend. Prefer &lt;strong&gt;environment variables&lt;/strong&gt; for credentials so they are not stored under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.terraform&lt;/code&gt; or in plan files:&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AWS_ACCESS_KEY_ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&amp;lt;YOUR ACCESS KEY&amp;gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AWS_SECRET_ACCESS_KEY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&amp;lt;YOUR SECRET KEY&amp;gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AWS_REGION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;us-west-1&quot;&lt;/span&gt;
+
+terraform init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you need to override only non-sensitive backend settings (e.g. bucket or key) without changing the config file:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform init &lt;span class=&quot;nt&quot;&gt;-backend-config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;bucket=YOUR-BUCKET-NAME&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-backend-config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;key=terraform.tfstate&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Add the workspaces to use&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform workspace new dev
+terraform workspace new prod
+terraform workspace new YOUR-WORKSPACE-NAME
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Select the workspace to use&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform workspace use dev
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Run plan and apply with the vars file for the environment&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform plan -var-file=&quot;variables_dev.tfvars&quot;
+terraform apply -var-file=&quot;variables_dev.tfvars&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+</description>
+        <pubDate>Tue, 20 Nov 2018 00:00:00 -0600</pubDate>
+        <link>http://localhost:4000/aws/2018/11/20/terraform.html</link>
+        <guid isPermaLink="true">http://localhost:4000/aws/2018/11/20/terraform.html</guid>
+        
+        <category>terraform</category>
+        
+        <category>AWS</category>
+        
+        <category>S3</category>
+        
+        <category>Backend</category>
+        
+        
+        <category>Aws</category>
+        
+      </item>
     
       <item>
         <title>How to delete Spot Instances using a Lambda function</title>
-        <description>&lt;p&gt;I know, almost everybody knows how to delete instances using lambda functions, but, there are a little difference between a &lt;code class=&quot;highlighter-rouge&quot;&gt;regular EC2 instance&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;spot instaces&lt;/code&gt;.
-In this case, let’s say that the &lt;code class=&quot;highlighter-rouge&quot;&gt;spot instances&lt;/code&gt; are slaves or workers for the &lt;code class=&quot;highlighter-rouge&quot;&gt;EC2 instances&lt;/code&gt;.&lt;/p&gt;
+        <description>&lt;p&gt;&lt;em&gt;Note: The sample code below was written for Python 2. For current Lambda runtimes (Python 3.x), use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;print()&lt;/code&gt; as a function and ensure the handler signature and boto3 usage match the &lt;a href=&quot;https://docs.aws.amazon.com/lambda/latest/dg/lambda-python.html&quot;&gt;Lambda Python documentation&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
 
-&lt;p&gt;You would need to use some additional libraries if you want this script works, those libraries are not isntalled by default on AWS, thats why you would need to build this script locally ( on your PC) before push it to AWS.&lt;/p&gt;
+&lt;p&gt;I know, almost everybody knows how to delete instances using lambda functions, but, there is a small difference between a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;regular EC2 instance&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;spot instances&lt;/code&gt;.
+In this case, let’s say that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;spot instances&lt;/code&gt; are slaves or workers for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EC2 instances&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;Those libraries are &lt;code class=&quot;highlighter-rouge&quot;&gt;pytz&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;datetime&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;You would need to use some additional libraries if you want this script works, those libraries are not installed by default on AWS, that’s why you need to build this script locally (on your PC) before pushing it to AWS.&lt;/p&gt;
+
+&lt;p&gt;Those libraries are &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pytz&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;datetime&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;I just added a small script that will install those libraries and compress the whole code before push it to AWS.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#!/usr/bin/env bash
 
-pip &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; pytz
-pip &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; datetime
-pip &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; logging
-zip &lt;span class=&quot;nt&quot;&gt;-r&lt;/span&gt; lamda.zip &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+pip install -t . pytz
+pip install -t . datetime
+pip install -t . logging
+zip -r lambda.zip .
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;As you can se we look for all the spot instances that has been fulfilled ( created and running ), otherwise it will fail with cancelled instances or terminated instances;
-also you can tell that we will terminate those &lt;code class=&quot;highlighter-rouge&quot;&gt;spot intances&lt;/code&gt; that have been working by more than 10h one by one.&lt;/p&gt;
+&lt;p&gt;As you can see we look for all the spot instances that have been fulfilled (created and running); otherwise it will fail with cancelled or terminated instances.
+We terminate those &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;spot instances&lt;/code&gt; that have been running for more than 10h one by one.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import boto3
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import boto3
 import logging
 from datetime import datetime
 from datetime import timedelta
@@ -44,17 +417,17 @@ logger.setLevel(logging.DEBUG)
 
 
 def lambda_handler(event, context):
-    client = boto3.client('ec2')
-    instances = client.describe_spot_instance_requests(Filters=[{'Name': 'status-code','Values': ['fulfilled']}] )
-    est = timezone('&amp;lt;AZ timezone&amp;gt;')
+    client = boto3.client(&apos;ec2&apos;)
+    instances = client.describe_spot_instance_requests(Filters=[{&apos;Name&apos;: &apos;status-code&apos;,&apos;Values&apos;: [&apos;fulfilled&apos;]}] )
+    est = timezone(&apos;&amp;lt;AZ timezone&amp;gt;&apos;)
     print est.localize(datetime.now())
     instance=[]
-    for r in instances['SpotInstanceRequests']:
-        print r['InstanceId']
-        print r['Status']['UpdateTime']
+    for r in instances[&apos;SpotInstanceRequests&apos;]:
+        print r[&apos;InstanceId&apos;]
+        print r[&apos;Status&apos;][&apos;UpdateTime&apos;]
         if r[&quot;CreateTime&quot;] &amp;lt; est.localize(datetime.now() - timedelta(hours=10)):
             print &quot;Instance Terminated Due more than 10h from creation time&quot;
-            instance.append(r['InstanceId'])
+            instance.append(r[&apos;InstanceId&apos;])
             client.terminate_instances( DryRun=False, InstanceIds=instance )
         else:
             print &quot;Instance OK&quot;
@@ -80,9 +453,9 @@ def lambda_handler(event, context):
     
       <item>
         <title>How to preconfigure user on Jenkins</title>
-        <description>&lt;p&gt;If you want to have preconfigurated your admin user at Jenkins and also your path to your maven and JDK you could use the next groovy script that will be placed at &lt;code class=&quot;highlighter-rouge&quot;&gt;init.groovy.d&lt;/code&gt;&lt;/p&gt;
+        <description>&lt;p&gt;If you want to have preconfigurated your admin user at Jenkins and also your path to your maven and JDK you could use the next groovy script that will be placed at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;init.groovy.d&lt;/code&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
 import hudson.security.*
 import jenkins.model.*
 
@@ -99,7 +472,7 @@ dis.setInstallations( new hudson.model.JDK(&quot;jdk8&quot;, &quot;/usr/java/jdk
 dis.save();
 
 def hudsonRealm = new HudsonPrivateSecurityRealm(false)
-hudsonRealm.createAccount('admin', 'admin')
+hudsonRealm.createAccount(&apos;admin&apos;, &apos;admin&apos;)
 instance.setSecurityRealm(hudsonRealm)
 
 def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
@@ -112,12 +485,12 @@ instance.save()
 
 &lt;p&gt;Files&lt;/p&gt;
 &lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;jenkins.install.InstallUtil.lastExecVersion&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;jenkins.install.UpgradeWizard.state&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jenkins.install.InstallUtil.lastExecVersion&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jenkins.install.UpgradeWizard.state&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;Content example&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 2.122
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 2.122
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 </description>
         <pubDate>Sun, 20 May 2018 00:00:00 -0600</pubDate>
@@ -128,7 +501,7 @@ instance.save()
         
         <category>admin</category>
         
-        <category>Intallation</category>
+        <category>Installation</category>
         
         <category>groovy</category>
         
@@ -141,12 +514,12 @@ instance.save()
         <title>How to preinstall plugins on Jenkins</title>
         <description>&lt;p&gt;If you ever wonder how to have your Jenkins server preconfigurated with your plugins before you even access to it by first time, let me show you how can you do it.&lt;/p&gt;
 
-&lt;p&gt;First you’ll need to create a directory called &lt;code class=&quot;highlighter-rouge&quot;&gt;init.groovy.d&lt;/code&gt; at the Jenkins root path, this folder will run every script that you put inside it on every restart; then you’ll need to 
-create a groovy file with your code. Ex. &lt;code class=&quot;highlighter-rouge&quot;&gt;plugins-add.groovy&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;First you’ll need to create a directory called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;init.groovy.d&lt;/code&gt; at the Jenkins root path, this folder will run every script that you put inside it on every restart; then you’ll need to 
+create a groovy file with your code. Ex. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;plugins-add.groovy&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;The plugins list (&lt;code class=&quot;highlighter-rouge&quot;&gt;pluginParameter&lt;/code&gt;) will be separated by spaces or the delimiter you prefer.&lt;/p&gt;
+&lt;p&gt;The plugins list (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pluginParameter&lt;/code&gt;) will be separated by spaces or the delimiter you prefer.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import jenkins.model.*
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import jenkins.model.*
 import java.util.logging.Logger
 def logger = Logger.getLogger(&quot;&quot;)
 def installed = false
@@ -192,7 +565,7 @@ if (installed) {
         
         <category>Plugins</category>
         
-        <category>Intallation</category>
+        <category>Installation</category>
         
         <category>groovy</category>
         

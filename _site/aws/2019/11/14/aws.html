@@ -1,0 +1,103 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="utf-8"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1; minimum-scale=1; user-scalable=no;"> <meta content="How to update URL on Nginx config file contained in Beanstalk artifact" name="description"> <meta name="keywords" content="AWS, Nginx, Ebextensions, Beanstalk"> <meta name="author" content="Andres Torres"> <meta name="baseurl" content=""> <title> Andres Torres|Update URL for Nginx on Beanstalk Deployments </title> <!-- favicon --> <link rel="shortcut icon" href="/static/assets/img/favicon.ico"> <!-- Main CSS --> <link href="/static/assets/app-20180125.min.css" rel="stylesheet"> <link href="/static/css/custom.css" rel="stylesheet"> <!-- Main Scripts --> <script src="/static/assets/app-20180125.min.js"></script> <script src="/static/assets/blog-20180125.min.js"></script> <!-- Google AdSense --> <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> <script> (adsbygoogle = window.adsbygoogle || []).push({ google_ad_client: "ca-pub-6196184668650108", enable_page_level_ads: true }); </script> </head> <body id="page-top" class="landing-page"> <div class="search-tool" style="position: fixed; top: 0px ; bottom: 0px; left: 0px; right: 0px; opacity: 0.95; background-color: #111111; z-index: 9999; display: none;"> <input type="text" class="form-control search-content" id="search-content" style="position: fixed; top: 60px" placeholder="Search Blog"> <div style="position: fixed; top: 16px; right: 16px; z-index: 9999;"> <img src="/static/assets/img/search/cb-close.png" id="close-btn"/> </div> </div> <div style="position: fixed; right: 16px; bottom: 20px; z-index: 9999;"> <img src="/static/assets/img/search/cb-search.png" id="search-btn" title="Double click Ctrl"/> </div> <div class="navbar-wrapper"> <nav class="navbar navbar-default navbar-fixed-top" role="navigation"> <div class="container"> <div class="navbar-header page-scroll"> <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="/">Andres Torres</a> </div> <div id="navbar" class="navbar-collapse collapse"> <ul class="nav navbar-nav navbar-right"> <li><a class="page-scroll" href="blog/"></a></li> <li> <a class="page-scroll" href="/blog/">Blog</a></li> <li> <a class="page-scroll" href="/aws/">AWS</a></li> <li> <a class="page-scroll" href="/linux/">Linux</a></li> <li> <a class="page-scroll" href="/jenkins/">Jenkins</a></li> <li> <a class="page-scroll" href="/docker/">Docker</a></li> <li> <a class="page-scroll" href="/vagrant/">Vagrant</a></li> <li> <a class="page-scroll" href="/chef/">Chef</a></li> <li> <a class="page-scroll" href="/terraform/">Terraform</a></li> <li> <a class="page-scroll" href="/ansible/">Ansible</a></li> <li> <a class="page-scroll" href="/life/">Others</a></li> </ul> </div> </div> </nav> </div> <div id="inSlider" class="carousel carousel-fade" data-ride="carousel"> <ol class="carousel-indicators"> <li data-target="#inSlider" data-slide-to="0" class="active"></li> <li data-target="#inSlider" data-slide-to="1"></li> </ol> <div class="carousel-inner" role="listbox"> <div class="item active"> <div class="container"> <div class="carousel-caption"> </div> <div class="carousel-image wow zoomIn"> <!-- <img src="static/img/landing/laptop.png" alt="laptop"/> --> </div> </div> <!-- Set background for slide in css --> <div class="header-back" style="background-image: url(/static/assets/img/landing/prog.jpg);" title="first banner image"> </div> </div> <div class="item"> <div class="container"> <div class="carousel-caption"> </div> <div class="carousel-image wow zoomIn"> <!-- <img src="static/img/landing/laptop.png" alt="laptop"/> --> </div> </div> <!-- Set background for slide in css --> <div class="header-back" style="background-image: url(/static/assets/img/landing/prog2.jpg);" title="2nd banner image"></div> </div> <div class="item"> <div class="container"> <div class="carousel-caption"> </div> <div class="carousel-image wow zoomIn"> <!-- <img src="static/img/landing/laptop.png" alt="laptop"/> --> </div> </div> <!-- Set background for slide in css --> <div class="header-back" style="background-image: url(/static/assets/img/landing/prog3.jpg);" title="3rd banner image"></div> </div> <div class="item"> <div class="container"> <div class="carousel-caption"> </div> <div class="carousel-image wow zoomIn"> <!-- <img src="static/img/landing/laptop.png" alt="laptop"/> --> </div> </div> <!-- Set background for slide in css --> <div class="header-back" style="background-image: url(/static/assets/img/landing/prog6.jpg);" title="4th banner image"></div> </div> </div> <a class="left carousel-control" href="#inSlider" role="button" data-slide="prev"> <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> <span class="sr-only">Previous</span> </a> <a class="right carousel-control" href="#inSlider" role="button" data-slide="next"> <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> <span class="sr-only">Next</span> </a> </div> <div class="wrapper wrapper-content animated fadeInRight article"> <div class="row"> <div class="col-lg-10 col-lg-offset-1"> <div class="ibox"> <div class="ibox-content"> <div class="pull-right"> <a class="btn btn-white btn-xs" href="/aws">Aws</a> </div> <div class="text-center article-title"> <span class="text-muted"><i class="fa fa-clock-o"></i> 14 Nov 2019</span> <h1> Update URL for Nginx on Beanstalk Deployments </h1> </div> <p><em>Note: Steps were valid as of 2019; Beanstalk and console options may have changed since then.</em></p> <h1 id="beanstalk-immutable-deployment">Beanstalk Immutable Deployment</h1> <p>I faced an issue during my CI-CD process, in this process an artifact is created in develop environment with a default configuration that includes a URL to test the development environment; this artifact is immutable and is promoted to the different environments (Staging, QA, Demo, Prod).</p> <p>The artifact structure will be something similar to this:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MY_APP/
+    MY_APP.jar
+    .ebextensions
+        certificates_deploy.config
+        additional_commands.config
+        nginx/
+            conf.d/
+                nginx_ssl.conf
+</code></pre></div></div> <p>The content of those files will be something similar to this:</p> <p><strong>certificates_deploy.config</strong></p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Resources:
+  AWSEBAutoScalingGroup:
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3Auth:
+          type: "s3"
+          buckets: ["BUCKET-NAME"]
+          roleName:
+            "Fn::GetOptionSetting":
+              Namespace: "aws:autoscaling:launchconfiguration"
+              OptionName: "IamInstanceProfile"
+              DefaultValue: "AWS-ACCESS-ROLE"
+
+files:
+  "/etc/nginx/certs/bundle.crt" :
+    mode: "000400"
+    owner: root
+    group: root
+    authentication: "S3Auth"
+    source: https://s3.amazonaws.com/BUCKET-NAME/&lt;PATH_TO_YOUR_BUNDLE&gt;/bundle.crt
+
+  "/etc/nginx/certs/my_domain.key" :
+    mode: "000400"
+    owner: root
+    group: root
+    authentication: "S3Auth"
+    source: https://s3.amazonaws.com/BUCKET-NAME/&lt;PATH_TO_YOUR_KEY&gt;/my_domain.key
+</code></pre></div></div> <p><strong>additional_commands.config</strong></p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>container_commands:
+  01update_ssl_url:
+    command: /etc/nginx/update_ssl_url.sh "$ENVIRONMENT_NAME" "$APPLICATION_NAME"
+  06restart_nginx:
+    command: "service nginx restart"
+
+files:
+  "/etc/nginx/update_ssl_url.sh":
+    content: |
+      #!/usr/bin/env bash
+      environment_name=$1
+      application_name=$2
+      sed -i "s/server_name*/server_name $application_name-$environment_name.my_domain.com;#/" /etc/nginx/conf.d/nginx_ssl.conf
+      cat /etc/nginx/conf.d/nginx_ssl.conf
+    mode: "000755"
+    owner: root
+    group: root
+</code></pre></div></div> <p><strong>nginx_ssl.conf</strong></p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+  listen        443 http2 ssl default_server;
+  access_log    /var/log/nginx/access.log main;
+  server_name my-service-dev.my_domain.com;
+  ssl_certificate /etc/nginx/certs/bundle.crt;
+  ssl_certificate_key /etc/nginx/certs/my_domain.key;
+  client_header_timeout 60;
+  client_body_timeout   60;
+  keepalive_timeout     60;
+  ...
+  ...
+</code></pre></div></div> <p>During the Execution will be pass an option file in JSON format with the Environment variables.</p> <p><strong>env-dev.json</strong></p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[
+  {
+    "Namespace": "aws:elasticbeanstalk:application:environment",
+    "OptionName": "APPLICATION_NAME",
+    "Value": "my-service"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:application:environment",
+    "OptionName": "ENVIRONMENT_NAME",
+    "Value": "dev"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:application:environment",
+    "OptionName": "SERVER_PORT",
+    "Value": "9999"
+  }
+]
+</code></pre></div></div> <p>this file will be readed during the insstance update</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>aws elasticbeanstalk update-environment --environment-name "my-service-dev" --version-label "1.0.0" --option-settings file://env-dev.json
+</code></pre></div></div> <p>Now according to <a href="https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html">AWS Documentation </a> the script <code class="language-plaintext highlighter-rouge">update_ssl_url.sh</code> should be executed after the artifact is unpacked in the instance, but this does not happen; the script is executed before the artifact is unpacked and the file <code class="language-plaintext highlighter-rouge">nginx_ssl.conf</code> is created in the instance giving you the same URL for every environment.</p> <p>After some investigation I found that I have to use the <a href="https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/custom-platform-hooks.html"><em>elasticbeanstalk hooks</em> </a> that allow you to execute scripts after, during or before the deployment.</p> <p>To be able to reach our goal the file <code class="language-plaintext highlighter-rouge">additional-commands.config</code> will be updated adding new lines and commands.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>container_commands:
+  01Install_jq:
+    command: "yum install -y jq"
+  02update_ssl_url:
+    command: /opt/elasticbeanstalk/hooks/appdeploy/post/update_ssl_url.sh
+  03restart_nginx:
+    command: "service nginx restart"
+
+files:
+  "/opt/elasticbeanstalk/hooks/appdeploy/post/update_ssl_url.sh":
+    content: |
+      #!/usr/bin/env bash
+      application_name=$(sudo bash -c '/opt/elasticbeanstalk/bin/get-config environment |jq -r ".APPLICATION_NAME"')
+      environment_name=$(sudo bash -c '/opt/elasticbeanstalk/bin/get-config environment |jq -r ".ENVIRONMENT_NAME"')
+      if test -f "/etc/nginx/conf.d/nginx_ssl.conf"; then
+        sed -i "s/server_name*/server_name $application_name-$environment_name.my_domain.com;#/" /etc/nginx/conf.d/nginx_ssl.conf
+        cat /etc/nginx/conf.d/nginx_ssl.conf
+      fi
+    mode: "000755"
+    owner: root
+    group: root
+</code></pre></div></div> <p>As you can see, we have installed <code class="language-plaintext highlighter-rouge">jq</code> this will be used to read the environment variables that are created using the <code class="language-plaintext highlighter-rouge">env-dev.json</code> file.</p> <p>Also we change the file location to <code class="language-plaintext highlighter-rouge">/opt/elasticbeanstalk/hooks/appdeploy/post/</code> that is the PATH that is readed by AWS during the deployment to execute scripts after the deployment.</p> <p>Using the <code class="language-plaintext highlighter-rouge">get-config environment</code> command we will be able to read the environment variables created with the <code class="language-plaintext highlighter-rouge">env-dev.josn</code> file, then, the the URL will be updated in the <code class="language-plaintext highlighter-rouge">nginx_ssl.conf</code> file and nginx will be restarted.</p> <hr> <div class="row"> <div class="col-md-6"> <h5 style="display: inline;">Tags:</h5> <button class="btn btn-white btn-xs" type="button">AWS</button> <button class="btn btn-white btn-xs" type="button">Nginx</button> <button class="btn btn-white btn-xs" type="button">Ebextensions</button> <button class="btn btn-white btn-xs" type="button">Beanstalk</button> </div> <div class="col-md-6"> <div class="small text-right"> <div> </div> </div> </div> </div> <br> <div class="row"> <div class="col-lg-12"> <!-- donate --> <br> <!-- share --> <div class="a2a_kit a2a_kit_size_32 a2a_default_style"> <a class="a2a_dd" href="https://www.addtoany.com/share"></a> <a class="a2a_button_facebook"></a> <a class="a2a_button_twitter"></a> <a class="a2a_button_google_plus"></a> <a class="a2a_button_linkedin"></a> <a class="a2a_button_email"></a> <a class="a2a_button_wechat"></a> <a class="a2a_button_sina_weibo"></a> <a class="a2a_button_pocket"></a> </div> <script> var a2a_config = a2a_config || {}; a2a_config.color_main = "D7E5ED"; a2a_config.color_border = "AECADB"; a2a_config.color_link_text = "333333"; a2a_config.color_link_text_hover = "333333"; </script> <script async src="https://static.addtoany.com/menu/page.js"></script> <br> <!-- comment --> </div> </div> </div> </div> </div> </div> </div> <!-- Google analytics --> <!-- GrowingIO --> </body> </html>

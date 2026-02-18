@@ -1,0 +1,29 @@
+# Freelance projects (consulting engagements)
+# Wording: deliverables and advisory, not full-time roles
+- name:
+    detail: 1454029 B.C. LTD
+    i18n: freelance_bc
+  desc:
+    detail: Consulting engagement. Delivered automated deployments with Terraform, Kubernetes, and AWS; reduced provisioning time. Implemented reusable CI/CD pipelines on GitHub Actions for infrastructure and application workflows.
+    i18n: freelance_bc_desc
+  date:
+    detail: Jan 2024 - Dec 2024
+    i18n: freelance_bc_date
+  job:
+    detail: DevOps Consultant
+    i18n: freelance_bc_job
+  icon: fa-briefcase
+
+- name:
+    detail: Xerris Inc.
+    i18n: freelance_xerris
+  desc:
+    detail: Consulting engagement. Delivered Terraform modules and reusable CI/CD workflows (GitLab, Bitbucket) to support infrastructure modernization and reduce time-to-deploy. Advised on scalable, secure environments on AWS and GCP. Supported technical hiring and mentoring initiatives.
+    i18n: freelance_xerris_desc
+  date:
+    detail: May 2020 - Dec 2023
+    i18n: freelance_xerris_date
+  job:
+    detail: DevOps Consultant
+    i18n: freelance_xerris_job
+  icon: fa-briefcase

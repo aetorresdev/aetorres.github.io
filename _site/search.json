@@ -3,6 +3,30 @@
     "data" : [
      
     {
+        "title" : "Update URL for Nginx on Beanstalk Deployments - 2019-11-14",
+        "url" : "/aws/2019/11/14/aws.html"
+    }
+    
+    ,
+    
+    
+    {
+        "title" : "Configure API Gateway with Private Elastic Beanstalk - 2018-12-20",
+        "url" : "/aws/2018/12/20/aws.html"
+    }
+    
+    ,
+    
+    
+    {
+        "title" : "Shared Terraform State file - 2018-11-20",
+        "url" : "/aws/2018/11/20/terraform.html"
+    }
+    
+    ,
+    
+    
+    {
         "title" : "How to delete Spot Instances using a Lambda function - 2018-06-20",
         "url" : "/aws/2018/06/20/lambda.html"
     }

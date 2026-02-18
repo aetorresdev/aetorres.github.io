@@ -12,6 +12,12 @@
   tpl: career.html
   css: timeline
 
+- id: freelance
+  i18n: nav.freelance
+  name: Freelance
+  tpl: freelance.html
+  css: timeline
+
 - id: skills
   i18n: nav.skills
   name: Skills
