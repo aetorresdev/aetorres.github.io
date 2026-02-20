@@ -1,49 +1,58 @@
-# skills section data - radar charts
+# skills section - radar charts
+# Strategy: 9-10 in 3-4 core areas, 6-7 complementary, 4-5 non-focus (signals maturity, not "high in everything")
 
-# Cloud platforms only (IaC moved to separate chart)
+# Cloud: AWS as clear lead
 - label: Cloud Platforms
   id: cs1
-  aspects: AWS, Azure, GCP, Akamai
-  percentage: 85, 60, 80, 40
+  aspects: AWS, GCP, Azure, Akamai
+  percentage: 92, 78, 65, 45
 
 - label: Operative Systems
   id: cs2
-  aspects: Linux, Solaris, Windows
-  percentage: 85, 75, 80
+  aspects: Linux, Windows, Solaris
+  percentage: 90, 70, 55
 
 - label: Programming
   id: cs3
-  aspects: Bash, PHP, Java, Ruby on Rails, Python
-  percentage: 75, 80, 70, 80, 70
+  aspects: Bash, Python, Ruby on Rails, Java, PHP
+  percentage: 88, 82, 65, 55, 60
 
-# IaC and config automation (no longer under "Cloud")
+# IaC: Terraform as core, rest complementary
 - label: IaC & Automation
   id: cs4
-  aspects: Terraform, CloudFormation, Ansible, Chef, Puppet
-  percentage: 90, 70, 75, 70, 65
+  aspects: Terraform, Ansible, CloudFormation, Chef, Puppet
+  percentage: 95, 80, 72, 65, 55
 
+# CI/CD: strong but differentiated
 - label: CI/CD
   id: cs5
-  aspects: Jenkins, GitHub Actions, CircleCI, GitLab CI, Bitbucket Pipelines, Flux, ArgoCD
-  percentage: 95, 90, 85, 75, 75, 70, 75
+  aspects: GitHub Actions, ArgoCD, CircleCI, Jenkins, Flux, GitLab CI, Bitbucket
+  percentage: 85, 70, 85, 92, 75, 75, 70
+
+# Platform Engineering - explicit Principal positioning
+- label: Platform Engineering
+  id: cs6
+  aspects: Self-service infra, Golden Paths, Internal platforms, Governance, Multi-tenant
+  percentage: 85, 82, 78, 75, 72
 
 - label: Virtualization & Containers
-  id: cs6
-  aspects: Docker, Kubernetes, Vagrant, Packer
-  percentage: 85, 80, 80, 75
+  id: cs7
+  aspects: Kubernetes, Docker, Packer, Vagrant
+  percentage: 90, 88, 75, 68
 
 - label: Observability
-  id: cs7
-  aspects: Prometheus, Grafana, DataDog, OpenTelemetry
-  percentage: 80, 80, 75, 70
-
-- label: DB and WebServers
   id: cs8
-  aspects: Weblogic, Apache, Tomcat, Nginx, Ambassador, MySql, PostgreSQL, SQL Server, Oracle SQL, Oracle SOA, Oracle Service Bus
-  percentage: 90, 85, 85, 80, 70, 90, 90, 75, 85, 75, 75
+  aspects: Grafana, Prometheus, DataDog, OpenTelemetry
+  percentage: 85, 82, 78, 72
 
-# AI: skills, agents, MCP usage, workflows, prompting (no vibe coding)
-- label: AI & Assistants
+# DB/WebServers: solid but not "everything 90" (legacy/support)
+- label: DB and WebServers
   id: cs9
-  aspects: AI skills, Agents, MCP, N8N, Prompting
-  percentage: 80, 75, 70, 70, 85
+  aspects: Nginx, PostgreSQL, MySQL, Apache, Tomcat, Oracle, Weblogic
+  percentage: 88, 85, 82, 80, 72, 65, 82
+
+# AI for DevOps - automation/agents, not "AI expert"
+- label: AI for DevOps
+  id: cs10
+  aspects: LLM integration, Agent workflows, MCP usage, Prompting, N8N
+  percentage: 75, 72, 70, 82, 68

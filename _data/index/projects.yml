@@ -8,7 +8,7 @@
   img: /static/assets/img/landing/github-mark.jpg
   desc: This project is a collection of AI skills and agents that can be used to automate tasks and workflows.
 
-- name: GitOps Certifications
+- name: GitOps Examples and workshops 
   i18n: cpython
   gh_user: aetorresdev
   repo: gitops-certification-examples
