@@ -1,23 +1,24 @@
 # projects section data
 # If you don't have language feature(language.yml is empty), ignore "i18n" items
 # Suggest projects' img be located at '/static/assets/img/landing', and edit following img items.
-- name: Chef-Terraform Example
+- name: AI Minions
   i18n: jalpc
-  gh_user: aetorres
-  repo: chef_terra
+  gh_user: aetorresdev
+  repo: ai-minions
   img: /static/assets/img/landing/github-mark.jpg
-  desc: This project is an example of AWS Jenkins configuration with Terraform and Chef
+  desc: This project is a collection of AI skills and agents that can be used to automate tasks and workflows.
 
-- name: Docker Rails-Nginx Image
+- name: GitOps Certifications
   i18n: cpython
-  gh_user: aetorres
-  repo: Docker-Rails-Nginx-Postgres
+  gh_user: aetorresdev
+  repo: gitops-certification-examples
   img: /static/assets/img/landing/github-mark.jpg
-  desc: This project is an Rails/Nginx image that works with a PostgresDB
+  desc: This repository contains examples for the ArgoCD/GitOps certification workshops.
+
 
 - name: Gcloud-K8-GoCD
   i18n: google
-  gh_user: aetorres
+  gh_user: aetorresdev
   repo: gc_k8s_gocd
   img: /static/assets/img/landing/github-mark.jpg
   desc: This project is an Rails/Nginx image that works with a PostgresDB

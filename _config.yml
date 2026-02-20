@@ -15,7 +15,7 @@ author:  # change following line to your infomation.
   first_name: Andres # Be used at index page about me section.
   last_name: Torres  # Be used at index page about me section.
   avatar: /static/assets/img/landing/avatar.jpg  # upload your avatar at directory and edit it.
-  github_username: aetorres  # Leave blank if you don't have now
+  github_username: aetorresdev  # Leave blank if you don't have now
   linkedin_id: aetorres # Leave blank if you don't have now
   #facebook_username: jiakunnj  # Leave blank if you don't have now
   twitter_username: andr3s_t  # Leave blank if you don't have now
@@ -27,7 +27,7 @@ author:  # change following line to your infomation.
   skill_icon2:
     - name: fa-linux
     - name: icon-apache
-  desc: "Senior DevOps engineer with 15+ years designing and automating cloud infrastructure. I focus on AWS, Terraform, Kubernetes, CI/CD (Jenkins, GitHub Actions, CircleCI, ArgoCD, Flux), and observability with OpenTelemetry, Grafana, and DataDog."
+  desc: "15+ years in software and infrastructure; 9+ years focused on DevOps/SRE and cloud platform engineering. Strong experience with AWS, Terraform, Kubernetes, CI/CD (Jenkins, GitHub Actions, CircleCI, ArgoCD, Flux), and observability (OpenTelemetry, Grafana, DataDog)."
   certifications:
     - "AWS Certified Solutions Architect – Associate (2023–2026)"
     - "Google Cloud Certified Professional Cloud Architect (2020–2022)"
